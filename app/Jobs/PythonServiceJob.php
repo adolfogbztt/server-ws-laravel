@@ -58,17 +58,14 @@ class PythonServiceJob implements ShouldQueue
         try {
             // $response = Http::get($apis[$this->type], ['photo_url' => $this->photo_url]);
             // ejecutar comando de consola
-            $command = 'notepad.exe '; // Reemplaza "dir" con tu comando
+            $command = 'notepad.exe'; // Reemplaza "dir" con tu comando
 
             $process = Process::fromShellCommandline($command);
             $process->run();
 
             if ($process->isSuccessful()) {
-
                 \Log::info("comando ejecutado de manera exitosa para photo_url: {$this->photo_url}");
-                
                 MessageSent::dispatch($this->token, ['message' => 'comando ejecutado de manera exitosa para photo_url: ' . $this->photo_url]);
-
             } else {
                 throw new ProcessFailedException($process);
                 // \Log::error("Error en la petición ");
