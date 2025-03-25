@@ -73,7 +73,6 @@ class PythonServiceV2Job implements ShouldQueue
             $dir = $modelData['dir'];
             $environment = $modelData['environment'];
             $outputName = (string) Str::uuid();
-            // $url = escapeshellarg($this->photo_url);
             $url = escapeshellcmd($this->photo_url);
             $url = str_replace(' ', '%20', $url);
 
@@ -100,22 +99,35 @@ class PythonServiceV2Job implements ShouldQueue
             unlink($response['url']);
 
             Log::info("Procesamiento exitoso para photo_url: {$this->photo_url}");
-            MessageSent::dispatch($this->token, [
-                'success' => true,
-                'message' => 'Foto procesada con éxito',
-                'data' => [
+            // MessageSent::dispatch($this->token, [
+            //     'success' => true,
+            //     'message' => 'Foto procesada con éxito',
+            //     'data' => [
+            //         'original_url' => $this->photo_url,
+            //         'processed_url' => $processed_url
+            //     ]
+            // ]);
+            dd([
+                'success'=> true,
+                'message'=> 'Foto procesada con éxito',
+                'data'=> [
                     'original_url' => $this->photo_url,
-                    'processed_url' => $processed_url,
+                    'processed_url' => $processed_url
                 ]
             ]);
 
         } catch (\Throwable $e) {
             Log::error("Error en PythonServiceJob: " . $e->getMessage());
-            MessageSent::dispatch($this->token, [
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => null
+            dd([
+                'success'=> false,
+                'message'=> $e->getMessage(),
+                'data'=> null
             ]);
+            // MessageSent::dispatch($this->token, [
+            //     'success' => false,
+            //     'message' => $e->getMessage(),
+            //     'data' => null
+            // ]);
         } finally {
             Cache::forget($lockKey);
         }
