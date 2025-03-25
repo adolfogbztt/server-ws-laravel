@@ -138,6 +138,6 @@ class PythonServiceV2Job implements ShouldQueue
      */
     private function uploadToS3(string $responsePath): string
     {
-        return 'https://media.formaproducciones.com/public/media/2024/PARROQUIA/SAGRADO_CORAZON/ARTISTICAS/9041-JADE-CHAMSSEDDINE-TORRES/watermark/ST2_3221.JPG';
+        return 'https://media.formaproducciones.com/public/media/2024/PARROQUIA SAGRADO CORAZON/ARTISTICAS/9041-JADE-CHAMSSEDDINE-TORRES/watermark/ST2_3221.JPG';
     }
 }
