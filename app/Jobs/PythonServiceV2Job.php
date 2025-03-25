@@ -21,7 +21,7 @@ class PythonServiceV2Job implements ShouldQueue
     /**
      * @var string
      */
-    private string $model;
+    public string $service;
 
     /**
      * @var string
@@ -44,13 +44,13 @@ class PythonServiceV2Job implements ShouldQueue
     private int $lockTime = 10;
 
     /**
-     * @param string $model
+     * @param string $service
      * @param string $photo_url
      * @param string $token
      */
-    public function __construct(string $model, string $photo_url, string $token)
+    public function __construct(string $service, string $photo_url, string $token)
     {
-        $this->model = $model;
+        $this->service = $service;
         $this->photo_url = $photo_url;
         $this->token = $token;
     }
@@ -61,17 +61,17 @@ class PythonServiceV2Job implements ShouldQueue
     public function handle(): void
     {
         $photoUrlMd5 = md5($this->photo_url);
-        $lockKey = "python_service_job:{$this->model}:{$photoUrlMd5}";
+        $lockKey = "python_service_job:{$this->service}:{$photoUrlMd5}";
 
         if (!Cache::add($lockKey, true, $this->lockTime)) {
-            Log::warning("El Job ya está en ejecución: {$this->model} - {$this->photo_url}");
+            Log::warning("El Job ya está en ejecución: {$this->service} - {$this->photo_url}");
             return;
         }
 
         try {
-            $modelData = $this->getModelInfo();
-            $dir = $modelData['dir'];
-            $environment = $modelData['environment'];
+            $serviceData = $this->getServiceInfo();
+            $dir = $serviceData['dir'];
+            $environment = $serviceData['environment'];
             $outputName = (string) Str::uuid();
             $url = escapeshellcmd($this->photo_url);
             $url = str_replace(' ', '%20', $url);
@@ -136,12 +136,12 @@ class PythonServiceV2Job implements ShouldQueue
     /**
      * @return array
      */
-    private function getModelInfo(): array
+    private function getServiceInfo(): array
     {
-        return match ($this->model) {
+        return match ($this->service) {
             'GFPGAN' => ['environment' => 'GFPGAN', 'dir' => 'C:\\Users\\user\\GFPGAN'],
             'REMBG' => ['environment' => 'BACKGROUND-REMOVAL', 'dir' => 'C:\\Users\\user\\REMBG'],
-            default => throw new \InvalidArgumentException("Modelo no soportado: {$this->model}")
+            default => throw new \InvalidArgumentException("Servicio no soportado: {$this->service}")
         };
     }
 
