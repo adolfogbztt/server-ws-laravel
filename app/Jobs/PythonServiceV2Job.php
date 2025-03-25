@@ -73,7 +73,9 @@ class PythonServiceV2Job implements ShouldQueue
             $dir = $modelData['dir'];
             $environment = $modelData['environment'];
             $outputName = (string) Str::uuid();
-            $url = escapeshellarg($this->photo_url);
+            // $url = escapeshellarg($this->photo_url);
+            $url = escapeshellcmd($this->photo_url);
+            $url = str_replace(' ', '%20', $url);
 
             $command = [
                 'cmd', '/c', "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --url={$url} --output_name={$outputName}"
