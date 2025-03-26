@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
@@ -162,6 +163,12 @@ class PythonServiceV2Job implements ShouldQueue
 
         $filename = basename($responsePath);
 
-        return "https://s3.amazonaws.com/your-bucket/{$filename}";
+        $uploaded = Storage::disk('s3')->put($filename, file_get_contents($responsePath), 'public');
+
+        if (!$uploaded) {
+            throw new \Exception("Error al subir el archivo a S3: {$filename}");
+        }
+
+        return Storage::disk('s3')->url($filename);
     }
 }
