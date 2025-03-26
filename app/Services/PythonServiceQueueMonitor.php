@@ -43,8 +43,6 @@ class PythonServiceQueueMonitor
             $payload = json_decode($job->payload);
             $data = unserialize($payload->data->command);
 
-            // dd($data);
-
             if (isset($data->service)) {
                 $service = $data->service;
 
