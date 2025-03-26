@@ -60,6 +60,7 @@ class PythonServiceV2Job implements ShouldQueue
      */
     public function handle(): void
     {
+        $start = microtime(true);
         $photoUrlMd5 = md5($this->photo_url);
         $lockKey = "python_service_job:{$this->service}:{$photoUrlMd5}";
 
@@ -112,7 +113,8 @@ class PythonServiceV2Job implements ShouldQueue
                 'message'=> 'Foto procesada con éxito',
                 'data'=> [
                     'original_url' => $this->photo_url,
-                    'processed_url' => $processed_url
+                    'processed_url' => $processed_url,
+                    'time' => microtime(true) - $start
                 ]
             ]);
 
