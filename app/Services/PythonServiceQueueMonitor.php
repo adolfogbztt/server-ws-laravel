@@ -12,8 +12,8 @@ class PythonServiceQueueMonitor
     public static function getQueueStatus(): array
     {
         $estimatedTimesPerService = [
-            'GFPGAN' => 8,
-            'REMBG' => 6
+            'GFPGAN' => 18,
+            'REMBG' => 10
         ];
 
         $jobs = DB::table('jobs')->where('queue', 'python')->get();
