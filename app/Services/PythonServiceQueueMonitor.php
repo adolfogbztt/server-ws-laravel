@@ -16,6 +16,11 @@ class PythonServiceQueueMonitor
             'REMBG' => 10
         ];
 
+        $serviceCount = [
+            'GFPGAN' => 0,
+            'REMBG' => 0
+        ];
+
         $jobs = DB::table('jobs')->where('queue', 'python')->get();
 
         if ($jobs->isEmpty()) {
@@ -23,19 +28,11 @@ class PythonServiceQueueMonitor
                 'success' => true,
                 'message' => 'No jobs in queue',
                 'data' => [
-                    'count_per_service' => [
-                        'GFPGAN' => 0,
-                        'REMBG' => 0
-                    ],
+                    'count_per_service' => $serviceCount,
                     'total_estimated_wait_time' => 0
                 ],
             ];
         }
-
-        $serviceCount = [
-            'GFPGAN' => 0,
-            'REMBG' => 0
-        ];
         
         $totalTimeEstimate = 0;
 
