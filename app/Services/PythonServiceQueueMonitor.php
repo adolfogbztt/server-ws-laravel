@@ -57,6 +57,7 @@ class PythonServiceQueueMonitor
             'message' => 'Jobs in queue',
             'data' => [
                 'count_per_service' => $serviceCount,
+                'count_total' => count($jobs),
                 'total_estimated_wait_time' => $totalTimeEstimate
             ],
         ];
