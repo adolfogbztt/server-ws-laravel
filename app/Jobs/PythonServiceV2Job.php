@@ -98,7 +98,7 @@ class PythonServiceV2Job implements ShouldQueue
             }
 
             $processed_url = $this->uploadToS3($response['url']);
-            // unlink($response['url']);
+            unlink($response['url']);
 
             Log::info("Procesamiento exitoso para photo_url: {$this->photo_url}");
             // MessageSent::dispatch($this->token, [
