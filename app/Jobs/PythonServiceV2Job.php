@@ -105,6 +105,8 @@ class PythonServiceV2Job implements ShouldQueue
             //     'success' => true,
             //     'message' => 'Foto procesada con éxito',
             //     'data' => [
+            //         'service' => $this->service,
+            //         'time' => microtime(true) - $start,
             //         'original_url' => $this->photo_url,
             //         'processed_url' => $processed_url
             //     ]
