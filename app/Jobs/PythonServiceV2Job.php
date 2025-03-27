@@ -71,15 +71,20 @@ class PythonServiceV2Job implements ShouldQueue
         }
 
         try {
+            $filename = $this->downloadImage();
             $serviceData = $this->getServiceInfo();
             $dir = $serviceData['dir'];
             $environment = $serviceData['environment'];
-            $outputName = (string) Str::uuid();
-            $url = escapeshellcmd($this->photo_url);
-            $url = str_replace(' ', '%20', $url);
+            // $outputName = (string) Str::uuid();
+            // $url = escapeshellcmd($this->photo_url);
+            // $url = str_replace(' ', '%20', $url);
+
+            // $command = [
+            //     'cmd', '/c', "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --url={$url} --output_name={$outputName}"
+            // ];
 
             $command = [
-                'cmd', '/c', "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --url={$url} --output_name={$outputName}"
+                'cmd', '/c', "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --filename={$filename}"
             ];
 
             $process = new Process($command);
@@ -97,8 +102,11 @@ class PythonServiceV2Job implements ShouldQueue
                 throw new \Exception($response['message'] ?? 'Error desconocido en la ejecución del script.');
             }
 
-            $processed_url = $this->uploadToS3($response['url']);
-            unlink($response['url']);
+            $processed_url = $this->uploadToS3($response['processed_image_path']);
+
+            // Clean up the tmp images
+            @unlink("{$dir}\\tmp_image\\{$filename}");
+            @unlink($response['processed_image']);
 
             Log::info("Procesamiento exitoso para photo_url: {$this->photo_url}");
             // MessageSent::dispatch($this->token, [
@@ -149,6 +157,41 @@ class PythonServiceV2Job implements ShouldQueue
             'REMBG' => ['environment' => 'BACKGROUND-REMOVAL', 'dir' => 'C:\\Users\\user\\REMBG'],
             default => throw new \InvalidArgumentException("Servicio no soportado: {$this->service}")
         };
+    }
+
+    /**
+     * @return string
+     */
+    private function downloadImage(): string
+    {
+        $serviceData = $this->getServiceInfo();
+        $dir = $serviceData['dir'];
+        $tmpImageDir = "{$dir}\\tmp_image";
+
+        if (!is_dir($tmpImageDir)) {
+            mkdir($tmpImageDir, 0777, true);
+        }
+
+        $pathInfo = pathinfo(parse_url($this->photo_url, PHP_URL_PATH));
+        $extension = $pathInfo['extension'] ?? 'jpg';
+
+        $extension = explode('?', $extension)[0];
+
+        $filename = Str::uuid() . ".{$extension}";
+        $localPath = "{$tmpImageDir}\\{$filename}";
+
+        try {
+            $imageContent = file_get_contents($this->photo_url);
+
+            if ($imageContent === false) {
+                throw new \Exception("Error al descargar la imagen: {$this->photo_url}");
+            }
+
+            file_put_contents($localPath, $imageContent);
+            return $filename;
+        } catch (\Throwable $e) {
+            throw new \Exception("Error al descargar la imagen: {$this->photo_url}");
+        }
     }
 
     /**
