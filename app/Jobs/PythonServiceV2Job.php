@@ -75,13 +75,6 @@ class PythonServiceV2Job implements ShouldQueue
             $serviceData = $this->getServiceInfo();
             $dir = $serviceData['dir'];
             $environment = $serviceData['environment'];
-            // $outputName = (string) Str::uuid();
-            // $url = escapeshellcmd($this->photo_url);
-            // $url = str_replace(' ', '%20', $url);
-
-            // $command = [
-            //     'cmd', '/c', "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --url={$url} --output_name={$outputName}"
-            // ];
 
             $command = [
                 'cmd', '/c', "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --filename={$filename}"
@@ -102,11 +95,12 @@ class PythonServiceV2Job implements ShouldQueue
                 throw new \Exception($response['message'] ?? 'Error desconocido en la ejecución del script.');
             }
 
-            $processed_url = $this->uploadToS3($response['processed_image_path']);
+            $output_file_path = "{$dir}\\output\\" . $response['processed_image'];
+            $processed_url = $this->uploadToS3($output_file_path);
 
             // Clean up the tmp images
             @unlink("{$dir}\\tmp_image\\{$filename}");
-            @unlink($response['processed_image']);
+            @unlink($output_file_path);
 
             Log::info("Procesamiento exitoso para photo_url: {$this->photo_url}");
             // MessageSent::dispatch($this->token, [
