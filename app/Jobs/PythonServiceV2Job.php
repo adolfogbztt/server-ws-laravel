@@ -28,17 +28,17 @@ class PythonServiceV2Job implements ShouldQueue
      * @var string
      */
     private string $photo_url;
-    
+
     /**
      * @var string
      */
     private string $token;
-    
+
     /**
      * @var string
      */
     private string $pythonPath = 'C:\\Users\\user\\anaconda3\\Scripts\\conda';
-    
+
     /**
      * @var int
      */
@@ -57,6 +57,8 @@ class PythonServiceV2Job implements ShouldQueue
     }
 
     /**
+     * Handles the job of processing the image using a Python service.
+     * 
      * @return void
      */
     public function handle(): void
@@ -77,7 +79,9 @@ class PythonServiceV2Job implements ShouldQueue
             $environment = $serviceData['environment'];
 
             $command = [
-                'cmd', '/c', "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --filename={$filename}"
+                'cmd',
+                '/c',
+                "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --filename={$filename}"
             ];
 
             $process = new Process($command);
@@ -103,45 +107,38 @@ class PythonServiceV2Job implements ShouldQueue
             @unlink($output_file_path);
 
             Log::info("Procesamiento exitoso para photo_url: {$this->photo_url}");
-            // MessageSent::dispatch($this->token, [
-            //     'success' => true,
-            //     'message' => 'Foto procesada con éxito',
-            //     'data' => [
-            //         'service' => $this->service,
-            //         'time' => microtime(true) - $start,
-            //         'original_url' => $this->photo_url,
-            //         'processed_url' => $processed_url
-            //     ]
-            // ]);
-            dd([
-                'success'=> true,
-                'message'=> 'Foto procesada con éxito.',
-                'data'=> [
-                    'service' => $this->service,
-                    'time' => microtime(true) - $start,
-                    'original_url' => $this->photo_url,
-                    'processed_url' => $processed_url,
+            MessageSent::dispatch(
+                $this->token,
+                'service-response',
+                [
+                    'success' => true,
+                    'message' => 'Foto procesada con éxito',
+                    'data' => [
+                        'service' => $this->service,
+                        'time' => microtime(true) - $start,
+                        'original_url' => $this->photo_url,
+                        'processed_url' => $processed_url
+                    ]
                 ]
-            ]);
-
+            );
         } catch (\Throwable $e) {
-            Log::error("Error en PythonServiceJob: " . $e->getMessage());
-            dd([
-                'success'=> false,
-                'message'=> $e->getMessage(),
-                'data'=> null
-            ]);
-            // MessageSent::dispatch($this->token, [
-            //     'success' => false,
-            //     'message' => $e->getMessage(),
-            //     'data' => null
-            // ]);
+            MessageSent::dispatch(
+                $this->token,
+                'service-response',
+                [
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'data' => null
+                ]
+            );
         } finally {
             Cache::forget($lockKey);
         }
     }
 
     /**
+     * Returns the service information based on the service name.
+     * 
      * @return array
      */
     private function getServiceInfo(): array
@@ -154,7 +151,10 @@ class PythonServiceV2Job implements ShouldQueue
     }
 
     /**
+     * Downloads an image and validates that it is indeed an image before saving it.
+     *
      * @return string
+     * @throws \Exception
      */
     private function downloadImage(): string
     {
@@ -168,27 +168,38 @@ class PythonServiceV2Job implements ShouldQueue
 
         $pathInfo = pathinfo(parse_url($this->photo_url, PHP_URL_PATH));
         $extension = $pathInfo['extension'] ?? 'jpg';
-
         $extension = explode('?', $extension)[0];
 
         $filename = Str::uuid() . ".{$extension}";
         $localPath = "{$tmpImageDir}\\{$filename}";
 
         try {
-            $imageContent = file_get_contents($this->photo_url);
+            // Get the headers to check if it's an image
+            $headers = get_headers($this->photo_url, 1);
+            if (!isset($headers["Content-Type"]) || !str_starts_with($headers["Content-Type"], "image/")) {
+                throw new \Exception("El archivo descargado no es una imagen válida.");
+            }
 
+            $imageContent = file_get_contents($this->photo_url);
             if ($imageContent === false) {
                 throw new \Exception("Error al descargar la imagen: {$this->photo_url}");
+            }
+
+            // Validate if the content is an image
+            if (getimagesizefromstring($imageContent) === false) {
+                throw new \Exception("El archivo descargado no es una imagen válida.");
             }
 
             file_put_contents($localPath, $imageContent);
             return $filename;
         } catch (\Throwable $e) {
-            throw new \Exception("Error al descargar la imagen: {$this->photo_url}");
+            throw new \Exception("Error al descargar la imagen: " . $e->getMessage());
         }
     }
 
     /**
+     * Uploads the processed image to S3 and returns the URL.
+     * 
      * @param string $responsePath
      * 
      * @return string

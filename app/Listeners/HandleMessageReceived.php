@@ -2,7 +2,9 @@
 
 namespace App\Listeners;
 
-use App\Jobs\PythonServiceJob;
+use App\Events\MessageSent;
+use App\Jobs\PythonServiceV2Job;
+use App\Services\PythonServiceQueueMonitor;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 
@@ -16,23 +18,24 @@ class HandleMessageReceived
         //
     }
 
+    
     /**
      * Handle the event.
+     * 
+     * @param object $event
+     * 
+     * @return void
      */
     public function handle(object $event): void
     {
-        /**
-         * @var object $message
-         * 
-         */
-
         $message = json_decode($event->message);
         
         if ($message->event === 'client-request') {
-            # code...
             $data = $message->data;
-            PythonServiceJob::dispatch($data->model, $data->version, $data->photo_url, $data->token);
-            \Log::info('Mensaje recibido: ' . $data->model . ' ' . $data->photo_url . ' ' . $data->version);
+            PythonServiceV2Job::dispatch($data->service, $data->photo_url, $data->token);
+            $statusQueue = PythonServiceQueueMonitor::getQueueStatus();
+            MessageSent::dispatch($data->token, 'queue-status', $statusQueue);
+            // \Log::info('Mensaje recibido: ' . $data->model . ' ' . $data->photo_url . ' ' . $data->version);
         }
     }
 }
