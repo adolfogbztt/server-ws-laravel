@@ -181,14 +181,14 @@ class PythonServiceV2Job implements ShouldQueue
         try {
             // Get the headers to check if it's an image
             $headers = get_headers($this->photo_url, 1);
-            if (!isset($headers['Content-Type']) || !str_starts_with($headers['Content-Type'], 'image/')) {
+            if (!isset($headers['content-type']) || !str_starts_with($headers['content-type'], 'image/')) {
                 throw new \Exception('El archivo descargado no es una imagen válida.');
             }
 
             // Validate the maximum allowed size
             $maxSize = $this->maxImageSizeMB * 1024 * 1024;
-            if (isset($headers['Content-Length'])) {
-                $fileSize = (int) $headers['Content-Length'];
+            if (isset($headers['content-length'])) {
+                $fileSize = (int) $headers['content-length'];
                 if ($fileSize > $maxSize) {
                     throw new \Exception("La imagen excede el tamaño máximo permitido ($this->maxImageSizeMB MB).");
                 }
