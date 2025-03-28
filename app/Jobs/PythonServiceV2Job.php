@@ -45,6 +45,11 @@ class PythonServiceV2Job implements ShouldQueue
     private int $lockTime = 10;
 
     /**
+     * @var int
+     */
+    private int $maxImageSizeMB = 10;
+
+    /**
      * @param string $service
      * @param string $photo_url
      * @param string $token
@@ -151,7 +156,7 @@ class PythonServiceV2Job implements ShouldQueue
     }
 
     /**
-     * Downloads an image and validates that it is indeed an image before saving it.
+     * Downloads an image and validates its type and size.
      *
      * @return string
      * @throws \Exception
@@ -176,8 +181,19 @@ class PythonServiceV2Job implements ShouldQueue
         try {
             // Get the headers to check if it's an image
             $headers = get_headers($this->photo_url, 1);
-            if (!isset($headers["Content-Type"]) || !str_starts_with($headers["Content-Type"], "image/")) {
-                throw new \Exception("El archivo descargado no es una imagen válida.");
+            if (!isset($headers['Content-Type']) || !str_starts_with($headers['Content-Type'], 'image/')) {
+                throw new \Exception('El archivo descargado no es una imagen válida.');
+            }
+
+            // Validate the maximum allowed size
+            $maxSize = $this->maxImageSizeMB * 1024 * 1024;
+            if (isset($headers['Content-Length'])) {
+                $fileSize = (int) $headers['Content-Length'];
+                if ($fileSize > $maxSize) {
+                    throw new \Exception("La imagen excede el tamaño máximo permitido ($this->maxImageSizeMB MB).");
+                }
+            } else {
+                throw new \Exception('No se pudo determinar el tamaño de la imagen.');
             }
 
             $imageContent = file_get_contents($this->photo_url);
@@ -187,13 +203,13 @@ class PythonServiceV2Job implements ShouldQueue
 
             // Validate if the content is an image
             if (getimagesizefromstring($imageContent) === false) {
-                throw new \Exception("El archivo descargado no es una imagen válida.");
+                throw new \Exception('El archivo descargado no es una imagen válida.');
             }
 
             file_put_contents($localPath, $imageContent);
             return $filename;
         } catch (\Throwable $e) {
-            throw new \Exception("Error al descargar la imagen: " . $e->getMessage());
+            throw new \Exception('Error al descargar la imagen: ' . $e->getMessage());
         }
     }
 
