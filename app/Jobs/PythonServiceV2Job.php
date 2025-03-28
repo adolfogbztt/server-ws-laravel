@@ -181,6 +181,15 @@ class PythonServiceV2Job implements ShouldQueue
         try {
             // Get the headers to check if it's an image
             $headers = get_headers($this->photo_url, 1);
+
+            // Validate if the headers were retrieved successfully
+            if ($headers === false) {
+                throw new \Exception("Error al obtener los encabezados de la imagen: {$this->photo_url}");
+            }
+
+            // Normalize the headers
+            $headers = array_change_key_case($headers, CASE_LOWER);
+
             if (!isset($headers['content-type']) || !str_starts_with($headers['content-type'], 'image/')) {
                 throw new \Exception('El archivo descargado no es una imagen válida.');
             }
