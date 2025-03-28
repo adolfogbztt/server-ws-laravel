@@ -32,7 +32,8 @@ class HandleMessageReceived
         
         if ($message->event === 'client-request') {
             $data = $message->data;
-            PythonServiceV2Job::dispatch($data->service, $data->photo_url, $data->token);
+            PythonServiceV2Job::dispatch($data->service, $data->photo_url, $data->token)
+                ->onQueue('python');
             $statusQueue = PythonServiceQueueMonitor::getQueueStatus();
             MessageSent::dispatch($data->token, 'queue-status', $statusQueue);
             // \Log::info('Mensaje recibido: ' . $data->model . ' ' . $data->photo_url . ' ' . $data->version);
