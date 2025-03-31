@@ -204,19 +204,6 @@ class PythonServiceV2Job implements ShouldQueue
                 throw new \Exception('No se pudo determinar el tamaño de la imagen.');
             }
 
-            // $imageContent = file_get_contents($this->photo_url);
-            // if ($imageContent === false) {
-            //     throw new \Exception("Error al descargar la imagen: {$this->photo_url}");
-            // }
-
-            // // Validate if the content is an image
-            // if (getimagesizefromstring($imageContent) === false) {
-            //     throw new \Exception('El archivo descargado no es una imagen válida.');
-            // }
-
-            // file_put_contents($localPath, $imageContent);
-            // return $filename;
-
             $fp = fopen($localPath, 'w');
 
             if (!$fp) {
