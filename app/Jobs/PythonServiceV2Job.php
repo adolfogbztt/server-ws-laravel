@@ -217,7 +217,7 @@ class PythonServiceV2Job implements ShouldQueue
             // file_put_contents($localPath, $imageContent);
             // return $filename;
 
-            $fp = fopen($this->photo_url, 'w');
+            $fp = fopen($localPath, 'w');
 
             if (!$fp) {
                 throw new \Exception("Error al abrir el archivo para escritura: {$localPath}");
