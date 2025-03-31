@@ -33,7 +33,6 @@ class HandleMessageReceived
         
         if ($message->event === 'client-request') {
             $data = $message->data;
-            $data->token = $event->token;
 
             // Validate token
             if (!$this->validateToken($data->token)) {
