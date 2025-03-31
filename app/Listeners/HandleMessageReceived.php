@@ -37,7 +37,7 @@ class HandleMessageReceived
 
             // Validate token
             if (!$this->validateToken($data->token)) {
-                MessageSent::dispatch($data->token, 'invalid-token', null);
+                MessageSent::dispatch($data->token, 'invalid-token', '');
                 return;
             }
 
