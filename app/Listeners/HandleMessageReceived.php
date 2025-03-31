@@ -7,6 +7,7 @@ use App\Jobs\PythonServiceV2Job;
 use App\Services\PythonServiceQueueMonitor;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Support\Facades\Http;
 
 class HandleMessageReceived
 {
@@ -32,11 +33,31 @@ class HandleMessageReceived
         
         if ($message->event === 'client-request') {
             $data = $message->data;
+            $data->token = $event->token;
+
+            // Validate token
+            if (!$this->validateToken($data->token)) {
+                MessageSent::dispatch($data->token, 'invalid-token', null);
+                return;
+            }
+
             PythonServiceV2Job::dispatch($data->service, $data->photo_url, $data->token)
                 ->onQueue('python');
             $statusQueue = PythonServiceQueueMonitor::getQueueStatus();
             MessageSent::dispatch($data->token, 'queue-status', $statusQueue);
-            // \Log::info('Mensaje recibido: ' . $data->model . ' ' . $data->photo_url . ' ' . $data->version);
         }
+    }
+
+    /**
+     * @param string $token
+     * 
+     * @return bool
+     */
+    private function validateToken(string $token): bool
+    {
+        $response = Http::withToken($token)
+            ->get(env('SIGA_API_URL') . 'validate-token');
+
+        return $response->successful();
     }
 }
