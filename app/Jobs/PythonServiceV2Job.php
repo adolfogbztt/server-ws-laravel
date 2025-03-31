@@ -174,16 +174,15 @@ class PythonServiceV2Job implements ShouldQueue
         $pathInfo = pathinfo(parse_url($this->photo_url, PHP_URL_PATH));
         $extension = $pathInfo['extension'] ?? 'jpg';
         $extension = explode('?', $extension)[0];
-
         $filename = Str::uuid() . ".{$extension}";
         $localPath = "{$tmpImageDir}\\{$filename}";
 
         try {
             // Get the headers to check if it's an image
-            $headers = get_headers($this->photo_url, 1);
+            $headers = @get_headers($this->photo_url, 1);
 
             // Validate if the headers were retrieved successfully
-            if ($headers === false) {
+            if ($headers === false || !is_array($headers)) {
                 throw new \Exception("Error al obtener los encabezados de la imagen: {$this->photo_url}");
             }
 
@@ -205,17 +204,54 @@ class PythonServiceV2Job implements ShouldQueue
                 throw new \Exception('No se pudo determinar el tamaño de la imagen.');
             }
 
-            $imageContent = file_get_contents($this->photo_url);
-            if ($imageContent === false) {
-                throw new \Exception("Error al descargar la imagen: {$this->photo_url}");
+            // $imageContent = file_get_contents($this->photo_url);
+            // if ($imageContent === false) {
+            //     throw new \Exception("Error al descargar la imagen: {$this->photo_url}");
+            // }
+
+            // // Validate if the content is an image
+            // if (getimagesizefromstring($imageContent) === false) {
+            //     throw new \Exception('El archivo descargado no es una imagen válida.');
+            // }
+
+            // file_put_contents($localPath, $imageContent);
+            // return $filename;
+
+            $fp = fopen($this->photo_url, 'w');
+
+            if (!$fp) {
+                throw new \Exception("Error al abrir el archivo para escritura: {$localPath}");
             }
 
-            // Validate if the content is an image
-            if (getimagesizefromstring($imageContent) === false) {
-                throw new \Exception('El archivo descargado no es una imagen válida.');
+            $ch = curl_init($this->photo_url);
+            curl_setopt($ch, CURLOPT_FILE, $fp);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_FAILONERROR, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Tiempo máximo de espera en segundos
+
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $error = curl_error($ch);
+
+            curl_close($ch);
+            fclose($fp);
+
+            if ($result === false) {
+                unlink($localPath);
+                throw new \Exception("Error en cURL: {$error}");
             }
 
-            file_put_contents($localPath, $imageContent);
+            if ($httpCode !== 200) {
+                unlink($localPath);
+                throw new \Exception("Error al descargar la imagen. Código HTTP: {$httpCode}");
+            }
+
+            // Verificar si el archivo realmente se descargó correctamente
+            if (!filesize($localPath)) {
+                unlink($localPath);
+                throw new \Exception("El archivo descargado está vacío: {$localPath}");
+            }
+
             return $filename;
         } catch (\Throwable $e) {
             throw new \Exception('Error al descargar la imagen: ' . $e->getMessage());
@@ -238,9 +274,15 @@ class PythonServiceV2Job implements ShouldQueue
 
         $filename = basename($responsePath);
 
-        $uploaded = Storage::disk('s3')->put($filename, file_get_contents($responsePath), 'public');
+        // $uploaded = Storage::disk('s3')->put($filename, file_get_contents($responsePath), 'public');
+        $uploadedPath = Storage::disk('s3')->putFileAs(
+            '',
+            $responsePath,
+            $filename,
+            ['visibility' => 'public']
+        );
 
-        if (!$uploaded) {
+        if (!$uploadedPath) {
             throw new \Exception("Error al subir el archivo a S3: {$filename}");
         }
 
