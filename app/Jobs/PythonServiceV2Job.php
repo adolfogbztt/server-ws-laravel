@@ -113,37 +113,29 @@ class PythonServiceV2Job implements ShouldQueue
 
             Log::info("Procesamiento exitoso para photo_url: {$this->photo_url}");
 
-            $jsonData = json_encode([
-                'success' => true,
-                'message' => 'Foto procesada con éxito',
-                'data' => [
-                    'service' => $this->service,
-                    'time' => microtime(true) - $start,
-                    'original_url' => $this->photo_url,
-                    'processed_url' => $processed_url
-                ]
-            ]);
-
-            $base64Data = base64_encode($jsonData);
-
             broadcast(new MessageSent(
                 $this->channel,
                 'service-response',
-                $base64Data
+                [
+                    'success' => true,
+                    'message' => 'Foto procesada con éxito',
+                    'data' => [
+                        'service' => $this->service,
+                        'time' => microtime(true) - $start,
+                        'original_url' => $this->photo_url,
+                        'processed_url' => $processed_url
+                    ]
+                ]
             ));
         } catch (\Throwable $e) {
-            $jsonData = json_encode([
-                'success' => false,
-                'message' => $e->getMessage(),
-                'data' => null
-            ]);
-
-            $base64Data = base64_encode($jsonData);
-
             broadcast(new MessageSent(
                 $this->channel,
                 'service-response',
-                $base64Data
+                [
+                    'success' => false,
+                    'message' => $e->getMessage(),
+                    'data' => null
+                ]
             ));
         } finally {
             Cache::forget($lockKey);
