@@ -59,6 +59,6 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastWith(): array
     {
-        return [$this->data];
+        return $this->data;
     }
 }
