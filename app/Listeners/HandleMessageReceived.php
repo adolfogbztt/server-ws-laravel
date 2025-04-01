@@ -36,7 +36,7 @@ class HandleMessageReceived
 
             // Validate token
             if (!$this->validateToken($data->token)) {
-                MessageSent::dispatch(
+                broadcast(new MessageSent(
                     $message->channel,
                     'invalid-token',
                     [
@@ -44,14 +44,18 @@ class HandleMessageReceived
                         'message' => 'Invalid token',
                         'data' => null,
                     ]
-                );
+                ));
                 return;
             }
 
             PythonServiceV2Job::dispatch($data->service, $data->photo_url, $message->channel)
                 ->onQueue('python');
             $statusQueue = PythonServiceQueueMonitor::getQueueStatus();
-            MessageSent::dispatch($message->channel, 'queue-status', $statusQueue);
+            broadcast(new MessageSent(
+                $message->channel,
+                'queue-status',
+                $statusQueue
+            ));
         }
     }
 

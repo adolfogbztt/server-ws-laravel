@@ -112,7 +112,7 @@ class PythonServiceV2Job implements ShouldQueue
             @unlink($output_file_path);
 
             Log::info("Procesamiento exitoso para photo_url: {$this->photo_url}");
-            MessageSent::dispatch(
+            broadcast(new MessageSent(
                 $this->channel,
                 'service-response',
                 [
@@ -125,9 +125,9 @@ class PythonServiceV2Job implements ShouldQueue
                         'processed_url' => $processed_url
                     ]
                 ]
-            );
+            ));
         } catch (\Throwable $e) {
-            MessageSent::dispatch(
+            broadcast(new MessageSent(
                 $this->channel,
                 'service-response',
                 [
@@ -135,7 +135,7 @@ class PythonServiceV2Job implements ShouldQueue
                     'message' => $e->getMessage(),
                     'data' => null
                 ]
-            );
+            ));
         } finally {
             Cache::forget($lockKey);
         }
