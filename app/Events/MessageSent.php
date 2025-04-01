@@ -15,7 +15,7 @@ class MessageSent implements ShouldBroadcast
     /**
      * @var string
      */
-    private string $token;
+    private string $channel;
     
     /**
      * @var string
@@ -28,20 +28,20 @@ class MessageSent implements ShouldBroadcast
     private array|string $data;
 
     /**
-     * @param string $token
+     * @param string $channel
      * @param string $event
      * @param array|string $data
      */
-    public function __construct(string $token, string $event, array|string $data)
+    public function __construct(string $channel, string $event, array|string $data)
     {
-        $this->token = $token;
+        $this->channel = $channel;
         $this->event = $event;
         $this->data = $data;
     }
 
     public function broadcastOn()
     {
-        return new Channel('responses.' . $this->token);
+        return new Channel($this->channel);
     }
 
     /**

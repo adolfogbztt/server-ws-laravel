@@ -32,7 +32,7 @@ class PythonServiceV2Job implements ShouldQueue
     /**
      * @var string
      */
-    private string $token;
+    private string $channel;
 
     /**
      * @var string
@@ -52,18 +52,18 @@ class PythonServiceV2Job implements ShouldQueue
     /**
      * @param string $service
      * @param string $photo_url
-     * @param string $token
+     * @param string $channel
      */
-    public function __construct(string $service, string $photo_url, string $token)
+    public function __construct(string $service, string $photo_url, string $channel)
     {
         $this->service = $service;
         $this->photo_url = $photo_url;
-        $this->token = $token;
+        $this->channel = $channel;
     }
 
     /**
      * Handles the job of processing the image using a Python service.
-     * 
+     *
      * @return void
      */
     public function handle(): void
@@ -113,7 +113,7 @@ class PythonServiceV2Job implements ShouldQueue
 
             Log::info("Procesamiento exitoso para photo_url: {$this->photo_url}");
             MessageSent::dispatch(
-                $this->token,
+                $this->channel,
                 'service-response',
                 [
                     'success' => true,
@@ -128,7 +128,7 @@ class PythonServiceV2Job implements ShouldQueue
             );
         } catch (\Throwable $e) {
             MessageSent::dispatch(
-                $this->token,
+                $this->channel,
                 'service-response',
                 [
                     'success' => false,
@@ -143,7 +143,7 @@ class PythonServiceV2Job implements ShouldQueue
 
     /**
      * Returns the service information based on the service name.
-     * 
+     *
      * @return array
      */
     private function getServiceInfo(): array
@@ -247,9 +247,9 @@ class PythonServiceV2Job implements ShouldQueue
 
     /**
      * Uploads the processed image to S3 and returns the URL.
-     * 
+     *
      * @param string $responsePath
-     * 
+     *
      * @return string
      */
     private function uploadToS3(string $responsePath): string
@@ -274,5 +274,6 @@ class PythonServiceV2Job implements ShouldQueue
         }
 
         return Storage::disk('s3')->url($filename);
+        // return 'https://media.formaproducciones.com/public/media/TEST/1.JPG';
     }
 }
