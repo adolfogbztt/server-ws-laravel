@@ -23,16 +23,16 @@ class MessageSent implements ShouldBroadcast
     private string $event;
     
     /**
-     * @var array
+     * @var string
      */
-    public array $data;
+    private string $data;
 
     /**
      * @param string $channel
      * @param string $event
-     * @param array $data
+     * @param string $data
      */
-    public function __construct(string $channel, string $event, array $data = [])
+    public function __construct(string $channel, string $event, string $data = '')
     {
         $this->channel = $channel;
         $this->event = $event;
@@ -59,6 +59,8 @@ class MessageSent implements ShouldBroadcast
      */
     public function broadcastWith(): array
     {
-        return $this->data;
+        return [
+            'data' => $this->data,
+        ];
     }
 }
