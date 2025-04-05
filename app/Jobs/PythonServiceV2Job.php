@@ -57,9 +57,10 @@ class PythonServiceV2Job implements ShouldQueue
     /**
      * @param string $service
      * @param string $photo_url
+     * @param string|null $bgColor
      * @param string $channel
      */
-    public function __construct(string $service, string $photo_url, string $bgColor = 'transparent', string $channel)
+    public function __construct(string $service, string $photo_url, ?string $bgColor = 'transparent', string $channel)
     {
         $this->service = $service;
         $this->photo_url = $photo_url;
