@@ -57,7 +57,7 @@ class PythonServiceV2Job implements ShouldQueue
     /**
      * @param string $service
      * @param string $photo_url
-     * @param string|null $bgColor
+     * @param string|null $bgColor | RGBA color or 'transparent'
      * @param string $channel
      */
     public function __construct(string $service, string $photo_url, ?string $bgColor = 'transparent', string $channel)
@@ -156,21 +156,58 @@ class PythonServiceV2Job implements ShouldQueue
      */
     private function buildCommand(string $service, string $dir, string $environment, string $filename): array
     {
-        $command = [
-            'cmd',
-            '/c',
-            "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --filename={$filename}"
-        ];
+        $baseCommand = "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --filename={$filename}";
 
         if ($service === 'REMBG' && isset($this->bgColor)) {
-            if (!preg_match('/^\d{1,3},\d{1,3},\d{1,3},\d{1,3}$/', $this->bgColor) && $this->bgColor !== 'transparent') {
-                throw new \InvalidArgumentException("El color de fondo debe ser un valor RGBA válido o 'transparent'.");
-            }
-
-            $command[2] .= " --bg_color={$this->bgColor}";
+            $normalizedColor = $this->normalizeBgColor($this->bgColor);
+            $baseCommand .= " --bg_color={$normalizedColor}";
         }
 
-        return $command;
+        return [
+            'cmd',
+            '/c',
+            $baseCommand
+        ];
+    }
+
+    /**
+     * Normalizes the background color to a valid RGBA format.
+     * 
+     * @param string $bgColor
+     * 
+     * @return string
+     */
+    private function normalizeBgColor(string $bgColor): string
+    {
+        $bgColor = strtolower(trim($bgColor));
+
+        if ($bgColor === 'transparent') {
+            return 'transparent';
+        }
+
+        $parts = explode(',', $bgColor);
+
+        if (count($parts) !== 4) {
+            throw new \InvalidArgumentException("The background color must have 4 RGBA components or be 'transparent'.");
+        }
+
+        [$r, $g, $b, $a] = $parts;
+
+        foreach ([$r, $g, $b, $a] as $component) {
+            if (!is_numeric($component) || (int)$component < 0 || (int)$component > 255) {
+                throw new \InvalidArgumentException('The components R, G, B must be between 0 and 255.');
+            }
+        }
+
+        // Check if $a is numeric and between 0 and 1
+        if (is_numeric($a) && floatval($a) <= 1) {
+            $a = intval(round(floatval($a) * 255));
+        } elseif (is_numeric($a) && ($a < 0 || $a > 255)) {
+            // $a = 255; // Default to 255 if out of range
+            throw new \InvalidArgumentException('The Alpha component must be between 0 and 1 or between 0 and 255.');
+        }
+    
+        return implode(',', [$r, $g, $b, $a]);
     }
 
     /**
