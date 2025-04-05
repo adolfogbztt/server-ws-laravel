@@ -51,7 +51,7 @@ class HandleMessageReceived
             PythonServiceV2Job::dispatch(
                 $data->service,
                 $data->photo_url,
-                @$data->bgColor,
+                @$data->bgColor ?? 'transparent',
                 $message->channel
             )
                 ->onQueue('python');
