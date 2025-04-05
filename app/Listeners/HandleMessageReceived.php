@@ -48,7 +48,12 @@ class HandleMessageReceived
                 return;
             }
 
-            PythonServiceV2Job::dispatch($data->service, $data->photo_url, $message->channel)
+            PythonServiceV2Job::dispatch(
+                $data->service,
+                $data->photo_url,
+                @$data->bgColor,
+                $message->channel
+            )
                 ->onQueue('python');
             $statusQueue = PythonServiceQueueMonitor::getQueueStatus();
 

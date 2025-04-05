@@ -32,6 +32,11 @@ class PythonServiceV2Job implements ShouldQueue
     /**
      * @var string
      */
+    private string $bgColor;
+
+    /**
+     * @var string
+     */
     private string $channel;
 
     /**
@@ -54,10 +59,11 @@ class PythonServiceV2Job implements ShouldQueue
      * @param string $photo_url
      * @param string $channel
      */
-    public function __construct(string $service, string $photo_url, string $channel)
+    public function __construct(string $service, string $photo_url, string $bgColor = 'transparent', string $channel)
     {
         $this->service = $service;
         $this->photo_url = $photo_url;
+        $this->bgColor = $bgColor;
         $this->channel = $channel;
     }
 
@@ -81,13 +87,8 @@ class PythonServiceV2Job implements ShouldQueue
             $filename = $this->downloadImage();
             $serviceData = $this->getServiceInfo();
             $dir = $serviceData['dir'];
-            $environment = $serviceData['environment'];
 
-            $command = [
-                'cmd',
-                '/c',
-                "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --filename={$filename}"
-            ];
+            $command = $this->buildCommand($this->service, $dir, $serviceData['environment'], $filename);
 
             $process = new Process($command);
             $process->setTimeout(300);
@@ -140,6 +141,35 @@ class PythonServiceV2Job implements ShouldQueue
         } finally {
             Cache::forget($lockKey);
         }
+    }
+
+    /**
+     * Builds the command to execute the Python script.
+     * 
+     * @param string $service
+     * @param string $dir
+     * @param string $environment
+     * @param string $filename
+     * 
+     * @return array
+     */
+    private function buildCommand(string $service, string $dir, string $environment, string $filename): array
+    {
+        $command = [
+            'cmd',
+            '/c',
+            "cd {$dir} && {$this->pythonPath} run -n {$environment} python script.py --filename={$filename}"
+        ];
+
+        if ($service === 'REMBG' && isset($this->bgColor)) {
+            if (!preg_match('/^\d{1,3},\d{1,3},\d{1,3},\d{1,3}$/', $this->bgColor) && $this->bgColor !== 'transparent') {
+                throw new \InvalidArgumentException("El color de fondo debe ser un valor RGBA válido o 'transparent'.");
+            }
+
+            $command[2] .= " --bg_color={$this->bgColor}";
+        }
+
+        return $command;
     }
 
     /**
