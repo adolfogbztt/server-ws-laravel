@@ -152,7 +152,7 @@ class PythonServiceV2Job implements ShouldQueue
                     'message' => $e->getMessage(),
                     'data' => [
                         'canvasIndex' => $this->canvasIndex,
-                        'elementIdnex' => $this->elementIndex
+                        'elementIndex' => $this->elementIndex
                     ]
                 ]
             ));
