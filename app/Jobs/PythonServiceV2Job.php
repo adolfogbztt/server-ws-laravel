@@ -227,6 +227,20 @@ class PythonServiceV2Job implements ShouldQueue
         return implode(',', [$r, $g, $b, $a]);
     }
 
+    private function codificarURL(string $url): string
+    {
+        // parse_url separa los componentes de la URL
+        $partes = parse_url($url);
+        // Codificamos cada parte individualmente
+        $esquema = isset($partes['scheme']) ? $partes['scheme'] . '://' : '';
+        $host = isset($partes['host']) ? $partes['host'] : '';
+        $puerto = isset($partes['port']) ? ':' . $partes['port'] : '';
+        $ruta = isset($partes['path']) ? implode('/', array_map('rawurlencode', explode('/', $partes['path']))) : '';
+        $query = isset($partes['query']) ? '?' . http_build_query(parse_str($partes['query'], $output), '', '&', PHP_QUERY_RFC3986) : '';
+        $fragmento = isset($partes['fragment']) ? '#' . rawurlencode($partes['fragment']) : '';
+        return $esquema . $host . $puerto . $ruta . $query . $fragmento;
+    }
+
     /**
      * Returns the service information based on the service name.
      *
@@ -264,8 +278,11 @@ class PythonServiceV2Job implements ShouldQueue
         $localPath = "{$tmpImageDir}\\{$filename}";
 
         try {
+            //
+            $url = $this->codificarURL($this->photo_url);
+
             // Get the headers to check if it's an image
-            $headers = @get_headers($this->photo_url, 1);
+            $headers = @get_headers($url, 1);
 
             // Validate if the headers were retrieved successfully
             if ($headers === false || !is_array($headers)) {
@@ -296,7 +313,7 @@ class PythonServiceV2Job implements ShouldQueue
                 throw new \Exception("Error al abrir el archivo para escritura: {$localPath}");
             }
 
-            $ch = curl_init($this->photo_url);
+            $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_FILE, $fp);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_FAILONERROR, true);
