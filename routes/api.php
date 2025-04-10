@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsureTokenIsValid;
 use App\Jobs\PythonServiceV2Job;
 use App\Services\PythonServiceQueueMonitor;
 use Illuminate\Http\Request;
@@ -9,13 +10,30 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::post('python/', function (Request $request) {
-    $data = $request->all();
+Route::middleware(EnsureTokenIsValid::class)->group(function () {
+    Route::post('/handle-message', function (Request $request) {
+        $message = json_decode($request->getContent());
 
-    PythonServiceV2Job::dispatch($data['service'], $data['photo_url'], $data['token'])
-        ->onQueue('python');
+        $data = $message->data;
 
-    $statusQueue = PythonServiceQueueMonitor::getQueueStatus();
+        // Validate token
+        if (!$this->validateToken($data->token)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid token',
+                'data' => null,
+            ]);
+        }
 
-    return response()->json($statusQueue);
+        PythonServiceV2Job::dispatch(
+            $data->service,
+            $data->photo_url,
+            @$data->bgColor ?? 'transparent',
+            $message->channel
+        )
+            ->onQueue('python');
+        $statusQueue = PythonServiceQueueMonitor::getQueueStatus();
+
+        return response()->json($statusQueue);
+    });
 });

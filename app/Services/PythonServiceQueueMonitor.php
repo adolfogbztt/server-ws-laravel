@@ -54,7 +54,7 @@ class PythonServiceQueueMonitor
 
         return [
             'success' => true,
-            'message' => 'Jobs in queue',
+            'message' => 'Job in queue',
             'data' => [
                 'count_per_service' => $serviceCount,
                 'count_total' => count($jobs),

@@ -323,26 +323,26 @@ class PythonServiceV2Job implements ShouldQueue
      */
     private function uploadToS3(string $responsePath): string
     {
-        // Implement your S3 upload logic here
-        if (!file_exists($responsePath)) {
-            throw new \Exception("El archivo no existe: {$responsePath}");
-        }
+        // // Implement your S3 upload logic here
+        // if (!file_exists($responsePath)) {
+        //     throw new \Exception("El archivo no existe: {$responsePath}");
+        // }
 
-        $filename = basename($responsePath);
+        // $filename = basename($responsePath);
 
-        // $uploaded = Storage::disk('s3')->put($filename, file_get_contents($responsePath), 'public');
-        $uploadedPath = Storage::disk('s3')->putFileAs(
-            '',
-            $responsePath,
-            $filename,
-            ['visibility' => 'public']
-        );
+        // // $uploaded = Storage::disk('s3')->put($filename, file_get_contents($responsePath), 'public');
+        // $uploadedPath = Storage::disk('s3')->putFileAs(
+        //     '',
+        //     $responsePath,
+        //     $filename,
+        //     ['visibility' => 'public']
+        // );
 
-        if (!$uploadedPath) {
-            throw new \Exception("Error al subir el archivo a S3: {$filename}");
-        }
+        // if (!$uploadedPath) {
+        //     throw new \Exception("Error al subir el archivo a S3: {$filename}");
+        // }
 
-        return Storage::disk('s3')->url($filename);
+        // return Storage::disk('s3')->url($filename);
         // return 'https://media.formaproducciones.com/public/media/TEST/1.JPG';
     }
 }
