@@ -55,17 +55,29 @@ class PythonServiceV2Job implements ShouldQueue
     private int $maxImageSizeMB = 10;
 
     /**
+     * @var int
+     */
+    private int $canvasIndex;
+
+    /**
+     * @var int
+     */
+    private int $elementIndex;
+
+    /**
      * @param string $service
      * @param string $photo_url
      * @param string|null $bgColor | RGBA color or 'transparent'
      * @param string $channel
      */
-    public function __construct(string $service, string $photo_url, ?string $bgColor = 'transparent', string $channel)
+    public function __construct(string $service, string $photo_url, ?string $bgColor = 'transparent', string $channel, int $canvasIndex, int $elementIndex)
     {
         $this->service = $service;
         $this->photo_url = $photo_url;
         $this->bgColor = $bgColor;
         $this->channel = $channel;
+        $this->canvasIndex = $canvasIndex;
+        $this->elementIndex = $elementIndex;
     }
 
     /**
@@ -108,13 +120,13 @@ class PythonServiceV2Job implements ShouldQueue
 
             $output_file_path = "{$dir}\\output\\" . $response['processed_image'];
             $processed_url = $this->uploadToS3($output_file_path);
+            Log::info('' . $processed_url);
 
             // Clean up the tmp images
             @unlink("{$dir}\\tmp_image\\{$filename}");
             @unlink($output_file_path);
 
-            Log::info("Procesamiento exitoso para photo_url: {$this->photo_url}");
-
+            Log::info('pre cast');
             broadcast(new MessageSent(
                 $this->channel,
                 'service-response',
@@ -125,7 +137,9 @@ class PythonServiceV2Job implements ShouldQueue
                         'service' => $this->service,
                         'time' => microtime(true) - $start,
                         'original_url' => $this->photo_url,
-                        'processed_url' => $processed_url
+                        'processed_url' => $processed_url,
+                        'canvasIndex' => $this->canvasIndex,
+                        'elementIndex' => $this->elementIndex
                     ]
                 ]
             ));
@@ -136,7 +150,10 @@ class PythonServiceV2Job implements ShouldQueue
                 [
                     'success' => false,
                     'message' => $e->getMessage(),
-                    'data' => null
+                    'data' => [
+                        'canvasIndex' => $this->canvasIndex,
+                        'elementIdnex' => $this->elementIndex
+                    ]
                 ]
             ));
         } finally {
@@ -194,7 +211,7 @@ class PythonServiceV2Job implements ShouldQueue
         [$r, $g, $b, $a] = $parts;
 
         foreach ([$r, $g, $b, $a] as $component) {
-            if (!is_numeric($component) || (int)$component < 0 || (int)$component > 255) {
+            if (!is_numeric($component) || (int) $component < 0 || (int) $component > 255) {
                 throw new \InvalidArgumentException('The components R, G, B must be between 0 and 255.');
             }
         }
@@ -206,7 +223,7 @@ class PythonServiceV2Job implements ShouldQueue
             // $a = 255; // Default to 255 if out of range
             throw new \InvalidArgumentException('The Alpha component must be between 0 and 1 or between 0 and 255.');
         }
-    
+
         return implode(',', [$r, $g, $b, $a]);
     }
 
@@ -323,26 +340,23 @@ class PythonServiceV2Job implements ShouldQueue
      */
     private function uploadToS3(string $responsePath): string
     {
-        // // Implement your S3 upload logic here
-        // if (!file_exists($responsePath)) {
-        //     throw new \Exception("El archivo no existe: {$responsePath}");
-        // }
 
-        // $filename = basename($responsePath);
+        if (!file_exists($responsePath)) {
+            throw new \Exception("El archivo no existe: {$responsePath}");
+        }
 
-        // // $uploaded = Storage::disk('s3')->put($filename, file_get_contents($responsePath), 'public');
-        // $uploadedPath = Storage::disk('s3')->putFileAs(
-        //     '',
-        //     $responsePath,
-        //     $filename,
-        //     ['visibility' => 'public']
-        // );
+        $filename = basename($responsePath);
 
-        // if (!$uploadedPath) {
-        //     throw new \Exception("Error al subir el archivo a S3: {$filename}");
-        // }
+        $file = file_get_contents($responsePath);
 
-        // return Storage::disk('s3')->url($filename);
+        $uploadedPath = Storage::disk('s3')->put($filename, $file, ['visibility' => 'public']);
+
+        if (!$uploadedPath) {
+            throw new \Exception("Error al subir el archivo a S3: {$responsePath} | {$filename}");
+        }
+
+        return Storage::disk('s3')->url($filename);
+        //throw new \Exception("Error al subir el archivo a S3");
         // return 'https://media.formaproducciones.com/public/media/TEST/1.JPG';
     }
 }

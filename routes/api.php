@@ -12,24 +12,15 @@ Route::get('/user', function (Request $request) {
 
 Route::middleware(EnsureTokenIsValid::class)->group(function () {
     Route::post('/handle-message', function (Request $request) {
-        $message = json_decode($request->getContent());
-
-        $data = $message->data;
-
-        // Validate token
-        if (!$this->validateToken($data->token)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid token',
-                'data' => null,
-            ]);
-        }
+        $data = json_decode($request->getContent());
 
         PythonServiceV2Job::dispatch(
             $data->service,
             $data->photo_url,
             @$data->bgColor ?? 'transparent',
-            $message->channel
+            $data->channel,
+            $data->canvasIndex,
+            $data->elementIndex
         )
             ->onQueue('python');
         $statusQueue = PythonServiceQueueMonitor::getQueueStatus();
