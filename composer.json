@@ -55,7 +55,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74,#34d399\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" \"php artisan reverb:start --debug --port=3001 \" --names=server,queue,logs,vite,reverb"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74,#34d399\" \"php artisan serve --host=0.0.0.0 --port=8000\" \"php artisan queue:listen --tries=1\" \"php artisan queue:listen --queue=python\" \"npm run dev\" \"php artisan reverb:start --debug --port=6001 \" --names=server,queue-default,queue-python,logs,vite,reverb"
         ]
     },
     "extra": {
