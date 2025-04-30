@@ -15,7 +15,6 @@ class LocalNetworkOnly
      */
     public function handle(Request $request, Closure $next): Response
     {
-        dd($request->ip());
         $allowedIps = [
             '127.0.0.1',
             '::1',
@@ -29,6 +28,12 @@ class LocalNetworkOnly
                 return $next($request);
             }
         }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'This resource is not available.',
+            'data' => null
+        ], 403);
     }
 
     /**
