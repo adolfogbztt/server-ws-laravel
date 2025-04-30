@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Middleware\EnsureTokenIsValid;
+use App\Http\Middleware\LocalNetworkOnly;
 use App\Jobs\PythonServiceV2Job;
 use App\Services\PythonServiceQueueMonitor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
@@ -37,5 +39,11 @@ Route::middleware(EnsureTokenIsValid::class)->group(function () {
         $statusQueue = PythonServiceQueueMonitor::getQueueStatus($selectedQueue);
 
         return response()->json($statusQueue);
+    });
+});
+
+Route::middleware(LocalNetworkOnly::class)->group(function () {
+    Route::get('/local/handle-message', function (Request $request) {
+        dd($request);
     });
 });
