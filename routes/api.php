@@ -14,6 +14,16 @@ Route::middleware(EnsureTokenIsValid::class)->group(function () {
     Route::post('/handle-message', function (Request $request) {
         $data = json_decode($request->getContent());
 
+        $jobs = DB::table('jobs')->where('queue', 'python')->count();
+
+        $jobs2 = DB::table('jobs')->where('queue', 'python2')->count();
+        $selectedQueue = 'python';
+
+        if ($jobs > $jobs2) {
+            $selectedQueue = 'python2';
+        }
+
+
         PythonServiceV2Job::dispatch(
             $data->service,
             $data->photo_url,
@@ -22,8 +32,9 @@ Route::middleware(EnsureTokenIsValid::class)->group(function () {
             $data->canvasIndex,
             $data->elementIndex
         )
-            ->onQueue('python');
-        $statusQueue = PythonServiceQueueMonitor::getQueueStatus();
+            ->onQueue($selectedQueue);
+
+        $statusQueue = PythonServiceQueueMonitor::getQueueStatus($selectedQueue);
 
         return response()->json($statusQueue);
     });

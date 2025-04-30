@@ -52,7 +52,7 @@ class PythonServiceV2Job implements ShouldQueue
     /**
      * @var int
      */
-    private int $maxImageSizeMB = 10;
+    private int $maxImageSizeMB = 5;
 
     /**
      * @var int
@@ -292,14 +292,34 @@ class PythonServiceV2Job implements ShouldQueue
             // Normalize the headers
             $headers = array_change_key_case($headers, CASE_LOWER);
 
-            if (!isset($headers['content-type']) || !str_starts_with($headers['content-type'], 'image/')) {
+            // if (!isset($headers['content-type']) || !str_starts_with($headers['content-type'], 'image/')) {
+            //     throw new \Exception('El archivo descargado no es una imagen válida.');
+            // }
+
+            if (!isset($headers['content-type'])) {
+                throw new \Exception('El archivo descargado no es una imagen válida.');
+            }
+
+            $contentType = $headers['content-type'];
+
+            if (is_array($contentType)) {
+                $contentType = end($contentType);
+            }
+
+            if (!str_starts_with($contentType, 'image/')) {
                 throw new \Exception('El archivo descargado no es una imagen válida.');
             }
 
             // Validate the maximum allowed size
             $maxSize = $this->maxImageSizeMB * 1024 * 1024;
             if (isset($headers['content-length'])) {
-                $fileSize = (int) $headers['content-length'];
+                $contentLength = $headers['content-length'];
+
+                if (is_array($contentLength)) {
+                    $contentLength = end($contentLength);
+                }
+
+                $fileSize = (int) $contentLength;
                 if ($fileSize > $maxSize) {
                     throw new \Exception("La imagen excede el tamaño máximo permitido ($this->maxImageSizeMB MB).");
                 }

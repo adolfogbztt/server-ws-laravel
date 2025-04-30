@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\DB;
 class PythonServiceQueueMonitor
 {
     /**
+     * @param string $selectedQueue
+     * 
      * @return array
      */
-    public static function getQueueStatus(): array
+    public static function getQueueStatus(string $selectedQueue): array
     {
         $estimatedTimesPerService = [
             'GFPGAN' => 18,
@@ -21,7 +23,7 @@ class PythonServiceQueueMonitor
             'REMBG' => 0
         ];
 
-        $jobs = DB::table('jobs')->where('queue', 'python')->get();
+        $jobs = DB::table('jobs')->where('queue', $selectedQueue)->get();
 
         if ($jobs->isEmpty()) {
             return [
@@ -54,7 +56,7 @@ class PythonServiceQueueMonitor
 
         return [
             'success' => true,
-            'message' => 'Job in queue',
+            'message' => 'Fotografia en proceso de transformación '. $totalTimeEstimate,
             'data' => [
                 'count_per_service' => $serviceCount,
                 'count_total' => count($jobs),
