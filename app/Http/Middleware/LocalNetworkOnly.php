@@ -15,9 +15,11 @@ class LocalNetworkOnly
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Permitir todas las solicitudes OPTIONS para CORS
-        if ($request->isMethod('OPTIONS')) {
-            return response()->json([], 200);
+        if ($request->getMethod() === 'OPTIONS') {
+            return response('', 204)
+                ->header('Access-Control-Allow-Origin', '*')
+                ->header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+                ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
         }
 
         $allowedIps = [

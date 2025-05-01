@@ -58,8 +58,4 @@ Route::middleware(LocalNetworkOnly::class)->group(function () {
 
         return response()->json($result);
     });
-
-    Route::options('/local/handle-message', function () {
-        return response()->json([], 200);
-    });
 });
