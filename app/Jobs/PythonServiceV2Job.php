@@ -120,13 +120,11 @@ class PythonServiceV2Job implements ShouldQueue
 
             $output_file_path = "{$dir}\\output\\" . $response['processed_image'];
             $processed_url = $this->uploadToS3($output_file_path);
-            Log::info('' . $processed_url);
 
             // Clean up the tmp images
             @unlink("{$dir}\\tmp_image\\{$filename}");
             @unlink($output_file_path);
 
-            Log::info('pre cast');
             broadcast(new MessageSent(
                 $this->channel,
                 'service-response',

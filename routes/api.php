@@ -2,7 +2,9 @@
 
 use App\Http\Middleware\EnsureTokenIsValid;
 use App\Http\Middleware\LocalNetworkOnly;
+use App\Jobs\PythonLocalServiceJob;
 use App\Jobs\PythonServiceV2Job;
+use App\Services\PythonLocalService;
 use App\Services\PythonServiceQueueMonitor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +27,6 @@ Route::middleware(EnsureTokenIsValid::class)->group(function () {
             $selectedQueue = 'python2';
         }
 
-
         PythonServiceV2Job::dispatch(
             $data->service,
             $data->photo_url,
@@ -43,7 +44,18 @@ Route::middleware(EnsureTokenIsValid::class)->group(function () {
 });
 
 Route::middleware(LocalNetworkOnly::class)->group(function () {
-    Route::get('/local/handle-message', function (Request $request) {
-        dd($request);
+    Route::post('/local/handle-message', function (Request $request) {
+        $data = json_decode($request->getContent());
+
+        $pythonLocalService = new PythonLocalService(
+            $data->service,
+            $data->base64Photo,
+            @$data->bgColor ?? 'transparent',
+            $data->channel
+        );
+
+        $result = $pythonLocalService->handle();
+
+        return response()->json($result);
     });
 });
