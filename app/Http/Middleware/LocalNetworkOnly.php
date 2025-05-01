@@ -15,6 +15,11 @@ class LocalNetworkOnly
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Permitir todas las solicitudes OPTIONS para CORS
+        if ($request->isMethod('OPTIONS')) {
+            return response()->json([], 200);
+        }
+
         $allowedIps = [
             '127.0.0.1',
             '::1',
@@ -22,7 +27,7 @@ class LocalNetworkOnly
         ];
 
         $clientIp = $request->ip();
-        
+
         foreach ($allowedIps as $allowedIp) {
             if ($this->ipMatches($clientIp, $allowedIp)) {
                 return $next($request);
