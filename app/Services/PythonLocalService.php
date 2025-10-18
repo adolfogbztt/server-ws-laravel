@@ -21,30 +21,17 @@ class PythonLocalService
     /**
      * @var string
      */
-    private string $bgColor;
-
-    /**
-     * @var string
-     */
-    private string $channel;
-
-    /**
-     * @var string
-     */
     private string $pythonPath = 'C:\\Users\\user\\anaconda3\\Scripts\\conda';
 
     /**
      * @param string $service
      * @param string $base64Photo
-     * @param string $bgColor
-     * @param string $channel
+     * @param string|null $bgColor
      */
-    public function __construct(string $service, string $base64Photo, string $bgColor, string $channel)
+    public function __construct(string $service, string $base64Photo)
     {
         $this->service = $service;
         $this->base64Photo = $base64Photo;
-        $this->bgColor = $bgColor;
-        $this->channel = $channel;
     }
     /**
      * Execute the job.
@@ -82,27 +69,19 @@ class PythonLocalService
             @unlink($output_file_path);
 
             return [
-                $this->channel,
-                'service-response',
-                [
-                    'success' => true,
-                    'message' => 'Foto procesada con éxito',
-                    'data' => [
-                        'service' => $this->service,
-                        'time' => microtime(true) - $start,
-                        'processed_image' => $processedBase64Image
-                    ]
+                'success' => true,
+                'message' => 'Foto procesada con éxito',
+                'data' => [
+                    'service' => $this->service,
+                    'time' => microtime(true) - $start,
+                    'processed_image' => $processedBase64Image
                 ]
             ];
         } catch (\Exception $e) {
             return [
-                $this->channel,
-                'service-response',
-                [
-                    'success' => false,
-                    'message' => $e->getMessage(),
-                    'data' => null
-                ]
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => null
             ];
         }
     }

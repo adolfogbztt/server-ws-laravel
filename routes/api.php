@@ -43,19 +43,41 @@ Route::middleware(EnsureTokenIsValid::class)->group(function () {
     });
 });
 
-Route::middleware(LocalNetworkOnly::class)->group(function () {
-    Route::post('/local/handle-message', function (Request $request) {
-        $data = json_decode($request->getContent());
+// // Route::middleware(LocalNetworkOnly::class)->group(function () {
+// Route::post('/local/handle-message', function (Request $request) {
+//     // $data = json_decode($request->getContent());
+//     // $service = $request->input('service');
 
-        $pythonLocalService = new PythonLocalService(
-            $data->service,
-            $data->base64Photo,
-            @$data->bgColor ?? 'transparent',
-            $data->channel
-        );
+//     // $photoBase64 = base64_encode($request->file('photo'));
 
-        $result = $pythonLocalService->handle();
+//     // $pythonLocalService = new PythonLocalService(
+//     //     $service,
+//     //     $photoBase64
+//     // );
 
-        return response()->json($result);
-    });
-});
+//     // $result = $pythonLocalService->handle();
+
+//     $path = $request->file('photo')->store('images', 'public');
+//     $base64Photo = getImageBase64($path);
+//     $service = $request->input('service');
+
+//     $pythonLocalService = new PythonLocalService(
+//         $service,
+//         $base64Photo
+//     );
+
+//     return response()->json($pythonLocalService);
+// });
+// // });
+
+// function getImageBase64($path): string
+// {
+//     // Obtiene el contenido binario de la imagen
+//     $fileContent = Storage::disk('public')->get($path);
+//     // Obtiene el tipo MIME del archivo
+//     $mime = Storage::disk('public')->mimeType($path);
+//     // Codifica en base64
+//     $base64 = base64_encode($fileContent);
+//     // Devuelve como string base64 con prefijo de datos
+//     return "data:$mime;base64,$base64";
+// }
