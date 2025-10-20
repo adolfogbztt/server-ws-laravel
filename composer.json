@@ -59,7 +59,7 @@
         ],
         "prod": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fb7185,#fdba74,#34d399\" \"php artisan queue:listen --tries=4 --timeout=300\" \"php artisan queue:listen --queue=python --timeout=300\"  \"php artisan queue:listen --queue=python2 --timeout=300\" \"npm run dev\" \"php artisan reverb:start --debug --port=3000 \" --names=server,queue-default,queue-python,queue-python2,logs,vite,reverb"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fb7185,#fdba74,#34d399,#93c5fd,#93c5fd\" \"php artisan queue:listen --tries=4 --timeout=300\" \"php artisan queue:listen --queue=python --timeout=300\" \"php artisan queue:listen --queue=python2 --timeout=300\" \"php artisan queue:listen --queue=naiade --timeout=0 --tries=0\" \"php artisan queue:listen --queue=naiade --timeout=0 --tries=0\" \"npm run dev\" \"php artisan reverb:start --debug --port=3000\" --names=server,queue-default,queue-python,queue-python2,queue-naiade,queue-naiade-2,logs,vite,reverb"
         ]
     },
     "extra": {

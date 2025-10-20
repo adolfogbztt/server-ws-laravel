@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\NaiadeController;
+use App\Http\Middleware\EnsureNaiadeTokenIsValid;
 use App\Http\Middleware\EnsureTokenIsValid;
 use App\Http\Middleware\LocalNetworkOnly;
 use App\Jobs\PythonLocalServiceJob;
@@ -41,6 +43,11 @@ Route::middleware(EnsureTokenIsValid::class)->group(function () {
 
         return response()->json($statusQueue);
     });
+});
+
+Route::middleware(EnsureNaiadeTokenIsValid::class)->group(function () {
+    Route::get('/naiade/{ticket}/send', [NaiadeController::class, 'handleTicket']);
+    Route::post('/naiade/{ticket}/status', [NaiadeController::class, 'statusTicket']);
 });
 
 // // Route::middleware(LocalNetworkOnly::class)->group(function () {

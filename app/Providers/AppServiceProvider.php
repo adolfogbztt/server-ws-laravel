@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Listeners\HandleMessageReceived;
+use App\Models\NaiadeTask;
+use App\Observers\NaiadeTaskObserver;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Reverb\Events\MessageReceived;
@@ -26,5 +28,7 @@ class AppServiceProvider extends ServiceProvider
             MessageReceived::class,
             HandleMessageReceived::class,
         );
+
+        NaiadeTask::observe(NaiadeTaskObserver::class);
     }
 }
