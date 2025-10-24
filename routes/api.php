@@ -46,7 +46,7 @@ Route::middleware(EnsureTokenIsValid::class)->group(function () {
 });
 
 Route::middleware(EnsureNaiadeTokenIsValid::class)->group(function () {
-    Route::get('/naiade/{ticket}/send', [NaiadeController::class, 'handleTicket']);
+    Route::get('/naiade/{ticket}/send', [NaiadeController::class, 'sendTicket']);
     Route::get('/naiade/{ticket}/status', [NaiadeController::class, 'ticketStatus']);
 });
 
