@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('service');
             $table->text('message')->nullable();
             $table->string('status')->default('PENDING');
+            $table->string('service_status')->default('IN_PROGRESS');
             $table->timestamps();
             $table->softDeletes();
         });

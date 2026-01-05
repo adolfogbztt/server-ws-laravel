@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\NaiadeTaskService;
 use App\Models\NaiadeTask;
+use App\Services\NaiadeTaskStatusService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -41,6 +42,36 @@ class NaiadeController extends Controller
         ], 200);
     }
 
+    // /**
+    //  * @param Request $request
+    //  * 
+    //  * @return JsonResponse
+    //  */
+    // public function ticketStatus(Request $request): JsonResponse
+    // {
+    //     $ticket = $request->route('ticket');
+
+    //     $naiadeTask = NaiadeTask::firstWhere('ticket', $ticket);
+
+    //     if (!$naiadeTask) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Ticket not found',
+    //             'data' => null
+    //         ], 404);
+    //     }
+
+    //     return response()->json([
+    //         'success' => true,
+    //         'message' => 'Ticket status retrieved successfully',
+    //         'data' => [
+    //             'ticket' => $naiadeTask->ticket,
+    //             'status' => $naiadeTask->status->value,
+    //             'message' => $naiadeTask->message,
+    //         ]
+    //     ], 200);
+    // }
+
     /**
      * @param Request $request
      * 
@@ -50,15 +81,9 @@ class NaiadeController extends Controller
     {
         $ticket = $request->route('ticket');
 
-        $naiadeTask = NaiadeTask::firstWhere('ticket', $ticket);
+        $naiadeTaskStatusService = new NaiadeTaskStatusService();
 
-        if (!$naiadeTask) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Ticket not found',
-                'data' => null
-            ], 404);
-        }
+        $naiadeTask = $naiadeTaskStatusService->checkStatus($ticket);
 
         return response()->json([
             'success' => true,

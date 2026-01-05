@@ -17,6 +17,7 @@ class NaiadeTask extends Model
         'service',
         'message',
         'status',
+        'service_status',
     ];
 
     protected $casts = [
